@@ -74,28 +74,41 @@ exports.createLpCoin = async (req, res) => {
   }
 };
 
-exports.getLpCoinById = async (req, res) => {
+// exports.getLpCoinById = async (req, res) => {
+//   try {
+//     const { lpCoinId } = req.params;
+//     const lpCoin = await LpCoin.findOne({ lpCoinId });
+
+//     if (!lpCoin) {
+//       return res.status(404).json({
+//         message: "LP Coin not found",
+//         lpCoinId,
+//       });
+//     }
+
+//     res.status(200).json({
+//       message: "LP Coin found successfully",
+//       data: lpCoin,
+//     });
+//   } catch (error) {
+//     console.error("Error in getLpCoinById:", error);
+//     res.status(500).json({
+//       message: "Server error while fetching LP Coin",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// Fetch liquidity history for a specific sender
+exports.getLpHistoryBySender = async (req, res) => {
   try {
-    const { lpCoinId } = req.params;
-    const lpCoin = await LpCoin.findOne({ lpCoinId });
+    const { sender } = req.params;
+    const history = await LpCoin.find({ sender }).sort({ timestamp: -1 });
 
-    if (!lpCoin) {
-      return res.status(404).json({
-        message: "LP Coin not found",
-        lpCoinId,
-      });
-    }
-
-    res.status(200).json({
-      message: "LP Coin found successfully",
-      data: lpCoin,
-    });
+    res.status(200).json(history);
   } catch (error) {
-    console.error("Error in getLpCoinById:", error);
-    res.status(500).json({
-      message: "Server error while fetching LP Coin",
-      error: error.message,
-    });
+    console.error("Error fetching LP history:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

@@ -1,11 +1,10 @@
-// models/LpCoin.js
 const mongoose = require("mongoose");
 
 const lpCoinSchema = new mongoose.Schema(
   {
     type: { type: String, required: true },
     sender: { type: String, required: true },
-    lpCoinId: { type: String, required: true, unique: true },
+    lpCoinId: { type: String, unique: true, required: true },
     token0Type: {
       name: { type: String, required: true },
     },
@@ -19,13 +18,13 @@ const lpCoinSchema = new mongoose.Schema(
     timestamp: { type: String, required: true },
   },
   {
-    timestamps: true,
+    timestamps: true, // Adds createdAt and updatedAt fields
   }
 );
 
-// Create indexes for better query performance
+// Index for faster queries
 lpCoinSchema.index({ lpCoinId: 1 });
 lpCoinSchema.index({ sender: 1 });
-lpCoinSchema.index({ timestamp: -1 });
+// lpCoinSchema.index({ timestamp: -1 });
 
 module.exports = mongoose.model("LpCoin", lpCoinSchema);
