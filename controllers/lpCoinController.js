@@ -37,7 +37,7 @@ exports.createLpCoin = async (req, res) => {
           amount1: event.amount1,
           liquidity: event.liquidity,
           totalSupply: event.totalSupply,
-          pairId: pairData.pairId,
+          pairId: event.pairId,
           transactionHash: event.transactionHash,
           timestamp: event.timestamp || new Date().toISOString(),
         });
