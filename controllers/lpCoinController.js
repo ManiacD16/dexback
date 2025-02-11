@@ -112,6 +112,114 @@ exports.getLpHistoryBySender = async (req, res) => {
   }
 };
 
+exports.getLpHistoryByTokens = async (req, res) => {
+  try {
+    const { token0Type, token1Type } = req.query;
+    console.log("Received tokens:", { token0Type, token1Type });
+
+    if (!token0Type || !token1Type) {
+      return res
+        .status(400)
+        .json({ message: "Both token0Type and token1Type are required" });
+    }
+
+    // First check what's in the database
+    const allRecords = await LpCoin.find({});
+    console.log("Total records in database:", allRecords.length);
+
+    if (allRecords.length > 0) {
+      console.log("Example record from DB:", {
+        token0: allRecords[0].token0Type.name,
+        token1: allRecords[0].token1Type.name,
+      });
+    }
+
+    // Create exact match query
+    const query = {
+      $or: [
+        {
+          "token0Type.name": token0Type,
+          "token1Type.name": token1Type,
+        },
+        {
+          "token0Type.name": token1Type,
+          "token1Type.name": token0Type,
+        },
+      ],
+    };
+
+    console.log("Query being executed:", JSON.stringify(query, null, 2));
+
+    const history = await LpCoin.find(query).sort({ timestamp: -1 });
+    console.log("Query results:", {
+      count: history.length,
+      results: history,
+    });
+
+    // Also try a more flexible search
+    const flexibleQuery = {
+      $or: [
+        {
+          "token0Type.name": {
+            $regex: token0Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            $options: "i",
+          },
+          "token1Type.name": {
+            $regex: token1Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            $options: "i",
+          },
+        },
+        {
+          "token0Type.name": {
+            $regex: token1Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            $options: "i",
+          },
+          "token1Type.name": {
+            $regex: token0Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            $options: "i",
+          },
+        },
+      ],
+    };
+
+    console.log("Flexible query:", JSON.stringify(flexibleQuery, null, 2));
+    const flexibleResults = await LpCoin.find(flexibleQuery).sort({
+      timestamp: -1,
+    });
+    console.log("Flexible query results:", {
+      count: flexibleResults.length,
+      results: flexibleResults,
+    });
+
+    // Try individual token searches to see if either token exists
+    const token0Search = await LpCoin.find({
+      $or: [
+        { "token0Type.name": { $regex: token0Type, $options: "i" } },
+        { "token1Type.name": { $regex: token0Type, $options: "i" } },
+      ],
+    });
+    const token1Search = await LpCoin.find({
+      $or: [
+        { "token0Type.name": { $regex: token1Type, $options: "i" } },
+        { "token1Type.name": { $regex: token1Type, $options: "i" } },
+      ],
+    });
+
+    console.log("Individual token searches:", {
+      token0Matches: token0Search.length,
+      token1Matches: token1Search.length,
+    });
+
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Error in getLpHistoryByTokens:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      message: error.message,
+    });
+  }
+};
+
 exports.getRecentLpCoins = async (req, res) => {
   try {
     const { limit = 10, skip = 0, sender } = req.query;
