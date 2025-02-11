@@ -9,6 +9,6 @@ const {
 // Define routes
 router.post("/lpcoin", createLpCoin);
 router.get("/lpcoin/:sender", getLpHistoryBySender);
-router.get("/lpcoin/history", getLpHistoryByTokens);
+// router.get("/lpcoin/history", getLpHistoryByTokens);
 
 module.exports = router;
