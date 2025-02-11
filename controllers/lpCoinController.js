@@ -114,101 +114,36 @@ exports.getLpHistoryBySender = async (req, res) => {
 
 exports.getLpHistoryByTokens = async (req, res) => {
   try {
-    const { token0Type, token1Type } = req.query;
-    console.log("Received tokens:", { token0Type, token1Type });
+    const { token0TypeName, token1TypeName } = req.query;
 
-    if (!token0Type || !token1Type) {
-      return res
-        .status(400)
-        .json({ message: "Both token0Type and token1Type are required" });
-    }
-
-    // First check what's in the database
-    const allRecords = await LpCoin.find({});
-    console.log("Total records in database:", allRecords.length);
-
-    if (allRecords.length > 0) {
-      console.log("Example record from DB:", {
-        token0: allRecords[0].token0Type.name,
-        token1: allRecords[0].token1Type.name,
+    if (!token0TypeName || !token1TypeName) {
+      return res.status(400).json({
+        message: "Both token0TypeName and token1TypeName are required",
       });
     }
 
-    // Create exact match query
+    console.log("Searching for tokens:", {
+      token0TypeName,
+      token1TypeName,
+    });
+
     const query = {
       $or: [
         {
-          "token0Type.name": token0Type,
-          "token1Type.name": token1Type,
+          "token0Type.name": token0TypeName,
+          "token1Type.name": token1TypeName,
         },
         {
-          "token0Type.name": token1Type,
-          "token1Type.name": token0Type,
+          "token0Type.name": token1TypeName,
+          "token1Type.name": token0TypeName,
         },
       ],
     };
 
-    console.log("Query being executed:", JSON.stringify(query, null, 2));
+    console.log("Query:", JSON.stringify(query, null, 2));
 
     const history = await LpCoin.find(query).sort({ timestamp: -1 });
-    console.log("Query results:", {
-      count: history.length,
-      results: history,
-    });
-
-    // Also try a more flexible search
-    const flexibleQuery = {
-      $or: [
-        {
-          "token0Type.name": {
-            $regex: token0Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-            $options: "i",
-          },
-          "token1Type.name": {
-            $regex: token1Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-            $options: "i",
-          },
-        },
-        {
-          "token0Type.name": {
-            $regex: token1Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-            $options: "i",
-          },
-          "token1Type.name": {
-            $regex: token0Type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-            $options: "i",
-          },
-        },
-      ],
-    };
-
-    console.log("Flexible query:", JSON.stringify(flexibleQuery, null, 2));
-    const flexibleResults = await LpCoin.find(flexibleQuery).sort({
-      timestamp: -1,
-    });
-    console.log("Flexible query results:", {
-      count: flexibleResults.length,
-      results: flexibleResults,
-    });
-
-    // Try individual token searches to see if either token exists
-    const token0Search = await LpCoin.find({
-      $or: [
-        { "token0Type.name": { $regex: token0Type, $options: "i" } },
-        { "token1Type.name": { $regex: token0Type, $options: "i" } },
-      ],
-    });
-    const token1Search = await LpCoin.find({
-      $or: [
-        { "token0Type.name": { $regex: token1Type, $options: "i" } },
-        { "token1Type.name": { $regex: token1Type, $options: "i" } },
-      ],
-    });
-
-    console.log("Individual token searches:", {
-      token0Matches: token0Search.length,
-      token1Matches: token1Search.length,
-    });
+    console.log("Found records:", history.length);
 
     res.status(200).json(history);
   } catch (error) {
