@@ -114,47 +114,13 @@ exports.getLpHistoryBySender = async (req, res) => {
 
 exports.getLpHistoryByTokens = async (req, res) => {
   try {
-    const { token0TypeName, token1TypeName } = req.query;
-
-    if (!token0TypeName || !token1TypeName) {
-      return res.status(400).json({
-        message: "Both token0TypeName and token1TypeName are required",
-      });
-    }
-
-    console.log("Searching for tokens:", {
-      token0TypeName,
-      token1TypeName,
-    });
-
-    const query = {
-      $or: [
-        {
-          "token0Type.name": token0TypeName,
-          "token1Type.name": token1TypeName,
-        },
-        {
-          "token0Type.name": token1TypeName,
-          "token1Type.name": token0TypeName,
-        },
-      ],
-    };
-
-    console.log("Query:", JSON.stringify(query, null, 2));
-
-    const history = await LpCoin.find(query).sort({ timestamp: -1 });
-    console.log("Found records:", history.length);
-
+    const history = await LpCoin.find({}).sort({ timestamp: -1 });
     res.status(200).json(history);
   } catch (error) {
-    console.error("Error in getLpHistoryByTokens:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      message: error.message,
-    });
+    console.error("Error fetching all LP history:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
 exports.getRecentLpCoins = async (req, res) => {
   try {
     const { limit = 10, skip = 0, sender } = req.query;
