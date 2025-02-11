@@ -37,6 +37,8 @@ exports.createLpCoin = async (req, res) => {
           amount1: event.amount1,
           liquidity: event.liquidity,
           totalSupply: event.totalSupply,
+          pairId: pairData.pairId,
+          transactionHash: event.transactionHash,
           timestamp: event.timestamp || new Date().toISOString(),
         });
 
@@ -112,15 +114,6 @@ exports.getLpHistoryBySender = async (req, res) => {
   }
 };
 
-exports.getLpHistoryByTokens = async (req, res) => {
-  try {
-    const history = await LpCoin.find({}).sort({ timestamp: -1 });
-    res.status(200).json(history);
-  } catch (error) {
-    console.error("Error fetching all LP history:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
 exports.getRecentLpCoins = async (req, res) => {
   try {
     const { limit = 10, skip = 0, sender } = req.query;

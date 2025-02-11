@@ -15,6 +15,8 @@ const lpCoinSchema = new mongoose.Schema(
     amount1: { type: String, required: true },
     liquidity: { type: String, required: true },
     totalSupply: { type: String, required: true },
+    pairId: { type: String, required: true }, // Added pairId
+    transactionHash: { type: String, required: true },
     timestamp: { type: String, required: true },
   },
   {
