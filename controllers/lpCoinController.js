@@ -114,6 +114,40 @@ exports.getLpHistoryBySender = async (req, res) => {
   }
 };
 
+// In lpCoinController.js
+exports.getLpHistoryByPair = async (req, res) => {
+  try {
+    const { pairId } = req.params;
+    console.log("Fetching history for pairId:", pairId);
+
+    // Add a count check
+    const count = await LpCoin.countDocuments({ pairId });
+    console.log(`Found ${count} documents for pairId ${pairId}`);
+
+    const history = await LpCoin.find({ pairId }).sort({ timestamp: -1 });
+
+    // If no records found, send a more informative response
+    if (history.length === 0) {
+      return res.status(200).json({
+        message: `No records found for pairId: ${pairId}`,
+        data: [],
+      });
+    }
+
+    res.status(200).json({
+      message: "Records found",
+      data: history,
+    });
+  } catch (error) {
+    console.error("Error fetching LP history:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message,
+      pairId: req.params.pairId,
+    });
+  }
+};
+
 exports.getRecentLpCoins = async (req, res) => {
   try {
     const { limit = 10, skip = 0, sender } = req.query;
